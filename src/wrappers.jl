@@ -9,11 +9,15 @@ function wrap_mafft(inpath, outpath)
 end
 
 """
-    wrap_fasttree(inpath, outpath; kwargs...)
+    wrap_fasttree(inpath, outpath; aa=false, kwargs...)
     Julia wrapper for fasttree.
 """
-function wrap_fasttree(inpath, outpath)
-    cmd = `fasttree -nt -nosupport -gamma -out $outpath $inpath`
+function wrap_fasttree(inpath, outpath; aa=false)
+    if aa
+        cmd = `fasttree -quiet -nosupport -gamma -out $outpath $inpath`
+    else
+        cmd = `fasttree -quiet -nt -nosupport -gamma -out $outpath $inpath`
+    end
     println(cmd)
     run(cmd)
 end

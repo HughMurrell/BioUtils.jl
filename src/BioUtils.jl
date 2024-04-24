@@ -3,7 +3,8 @@ module BioUtils
 export # utils
     util_list_pkg_functions,
     util_replace_gaps_with_ns,
-    util_remove_ns
+    util_remove_ns,
+    util_remove_xs
 
 export # fasta_io
     fasta_read,
@@ -18,6 +19,7 @@ export # tree
     tree_set_clades!,
     tree_plot,
     tree_mal_plot,
+    tree_aa_mal_plot,
     tree_mal_clade_partition,
     tree_mal_discriminating_columns,
     tree_mal_clade_discriminating_columns

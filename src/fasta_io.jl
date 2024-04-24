@@ -9,7 +9,7 @@ Handles case where fasta file is gzipped
 with file extension .gz
 
 """
-function fasta_read(filename)
+function fasta_read(filename; aa=false)
     if endswith(filename,".gz")
         stream = FASTAReader(GzipDecompressorStream(open(filename)))
     else
@@ -21,7 +21,11 @@ function fasta_read(filename)
         push!(records, entry)
     end
     close(stream)
-    sequences=LongSequence{DNAAlphabet{4}}.(FASTA.sequence.(records))
+    if ! aa
+        sequences=LongSequence{DNAAlphabet{4}}.(FASTA.sequence.(records))
+    else
+        sequences=LongSequence{AminoAcidAlphabet}.(FASTA.sequence.(records))
+    end
     identifiers=FASTA.identifier.(records)
     descriptions=FASTA.description.(records)
     return (sequences, identifiers, descriptions)
