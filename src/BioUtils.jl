@@ -16,13 +16,16 @@ export # wrappers
     
 export # tree
     tree_ladderize!,
+    tree_to_binary!,
+    tree_reroot!,
     tree_set_clades!,
+    tree_simple_plot,
     tree_plot,
-    tree_mal_plot,
-    tree_aa_mal_plot,
-    tree_mal_clade_partition,
-    tree_mal_discriminating_columns,
-    tree_mal_clade_discriminating_columns
+    tree_ali_nu_plot,
+    tree_ali_aa_plot,
+    tree_ali_clade_partition,
+    tree_ali_discriminating_columns,
+    tree_ali_clade_discriminating_columns
     
 using BioSymbols, BioSequences, FASTX, CodecZlib, Phylo, Plots, Colors
 using Logging, StatsBase

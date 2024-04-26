@@ -3,14 +3,13 @@ function util_list_pkg_functions(package)
     for nam in names(package)
         try
             if isa(getfield(package, nam), Function)
-                print("$(nam) ")
+                # print("$(nam) ")
                 push!(ret,nam)
             end
         catch(error)
-            println(error)
+            # println(error)
         end
     end
-    println()
     return ret
 end
 
