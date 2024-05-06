@@ -9,6 +9,18 @@ function wrap_mafft(inpath, outpath)
 end
 
 """
+    wrap_mafft_merge(mergetable, inpath, outpath, kwargs...)
+    Julia wrapper for mafft merge operation, use util_make_mafft_merge_table
+    to generate a mergetable.
+"""
+function wrap_mafft_merge(mergetable, inpath, outpath)
+    cmd = `mafft --merge $mergetable $inpath`
+    println(cmd)
+    run(pipeline(cmd,stdout=outpath))
+end
+
+
+"""
     wrap_fasttree(inpath, outpath; aa=false, kwargs...)
     Julia wrapper for fasttree.
 """
@@ -21,3 +33,4 @@ function wrap_fasttree(inpath, outpath; aa=false)
     println(cmd)
     run(cmd)
 end
+

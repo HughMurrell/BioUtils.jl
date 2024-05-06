@@ -140,6 +140,27 @@ function tree_set_clades!(tree, cut)
     end
 end
 
+function _visit_find(v,visits)
+    ind=findfirst((x->occursin(x, v)),visits)
+    if isnothing(ind)
+        return(0)
+    else
+        return(ind)
+    end
+end
+
+function tree_set_visits!(tree, visits; selection=collect(1:length(visits)))
+    getroots(tree)[1].data["visit"]=0
+    for n in traversal(tree, preorder)
+        if isleaf(tree,n)
+            n.data["visit"]=_visit_find(n.name,visits)
+            n.data["visit"] in selection ? nothing : n.data["visit"]=0
+        else
+            n.data["visit"]=0
+        end
+    end
+end
+
 function _plotcircle!(x,y,r)
     th = LinRange(0,2*pi,500)
     xc = x .+ ( r .* cos.(th) )
@@ -148,7 +169,9 @@ function _plotcircle!(x,y,r)
 end
     
 
-function tree_plot(tree; showclades=false, showcut=false, showtips=true, treetype = :dendrogram, markersize=5, linewidth=2, size = (400, 600), kwargs...)
+function tree_plot(tree; showclades=false, showcut=false, showtips=true, showvisits=false,
+                    treetype = :dendrogram, markersize=5, markerstrokewidth=0, linewidth=2,
+                    alpha=1.0, size = (400, 600), kwargs...)
     if showclades
         if ! ("cut" in keys(getroots(tree)[1].data) )
             println("tree_plot error: first call tree_set_clades! before calling tree_plot with showclades = true")
@@ -160,11 +183,12 @@ function tree_plot(tree; showclades=false, showcut=false, showtips=true, treetyp
             # isleaf(tree,n) ? c=_clade(tree,n,cut) : c=1
             push!(cm,n.data["clade"]+1)
         end
-        # cm=(x->x.data["clade"]).(getleaves(tree))
-        # dcs=distinguishable_colors(1+length(union(cm)), [RGB(0,0,0), RGB(1,1,1)], dropseed=false)[1:end-1]
-        dcs=vcat([RGB(0.9,0.9,0.9)],distinguishable_colors(length(union(cm))-1, [RGB(0,0,0)],dropseed=true))
+        nclades=length(union((x->x.data["clade"]).(getnodes(tree))))
+        dcs=vcat([RGB(0.9,0.9,0.9)],distinguishable_colors(nclades, [RGB(0,0,0)],dropseed=true))
         Logging.disable_logging(Logging.Warn)
-        pl=plot(tree, showtips = showtips,  markersize=markersize, markercolors=cm, palette=dcs, treetype=treetype, linewidth=linewidth, size=size, kwargs=kwargs)
+        pl=plot(tree, showtips = showtips,  markersize=markersize, markercolors=cm, palette=dcs,
+                        treetype=treetype, linewidth=linewidth, size=size,
+                        markerstrokewidth=markerstrokewidth, alpha=alpha, kwargs=kwargs)
         if showcut && treetype == :dendrogram
             vline!([cut],c=:gray)
             fm = Plots.font("DejaVu Sans", 8)
@@ -173,8 +197,31 @@ function tree_plot(tree; showclades=false, showcut=false, showtips=true, treetyp
         if treetype == :fan
             _plotcircle!(0,0,cut)
         end
-    else
-        pl=plot(tree, markersize=markersize, c=:black, treetype=treetype, linewidth = linewidth, size=size, showtips=showtips, kwargs=kwargs)
+    elseif showvisits
+        if ! ("visit" in keys(getroots(tree)[1].data) )
+            println("tree_plot error: first call tree_set_visits! before calling tree_plot with showvisits = true")
+            return(nothing)
+        end
+        # cut=getroots(tree)[1].data["visit"]
+        cm=[]
+        ms=[]
+        for n in traversal(tree, preorder)
+            # isleaf(tree,n) ? c=_clade(tree,n,cut) : c=1
+            push!(cm,n.data["visit"]+1)
+            n.data["visit"] > 0 ? push!(ms,markersize) : push!(ms,1)
+        end
+        # cm=(x->x.data["clade"]).(getleaves(tree))
+        # dcs=distinguishable_colors(1+length(union(cm)), [RGB(0,0,0), RGB(1,1,1)], dropseed=false)[1:end-1]
+        # dcs=vcat([RGB(0.9,0.9,0.9)],distinguishable_colors(length(union(cm))-1, [RGB(0,0,0)],dropseed=true))
+        nclades=length(union((x->x.data["visit"]).(getnodes(tree))))
+        dcs=vcat([RGB(0.9,0.9,0.9)],distinguishable_colors(nclades, [RGB(0,0,0)],dropseed=true))
+        Logging.disable_logging(Logging.Warn)
+        pl=plot(tree, showtips = showtips,  markersize=ms, markercolors=cm, palette=dcs,
+                    treetype=treetype, linewidth=linewidth, size=size,
+                    markerstrokewidth=markerstrokewidth, alpha=alpha, kwargs=kwargs)
+     else
+        pl=plot(tree, markersize=markersize, c=:black, treetype=treetype, linewidth = linewidth, size=size, showtips=showtips,
+                                    markerstrokewidth=markerstrokewidth, kwargs=kwargs)
     end
     return(pl)
 end
