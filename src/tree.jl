@@ -169,7 +169,8 @@ function _plotcircle!(x,y,r)
 end
     
 
-function tree_plot(tree; showclades=false, showcut=false, showtips=true, showvisits=false,
+function tree_plot(tree; showclades=false, showcut=false, showtips=true,
+                        visits=[], legend=:none,
                     treetype = :dendrogram, markersize=5, markerstrokewidth=0, linewidth=2,
                     alpha=1.0, size = (400, 600), kwargs...)
     if showclades
@@ -197,31 +198,54 @@ function tree_plot(tree; showclades=false, showcut=false, showtips=true, showvis
         if treetype == :fan
             _plotcircle!(0,0,cut)
         end
-    elseif showvisits
-        if ! ("visit" in keys(getroots(tree)[1].data) )
-            println("tree_plot error: first call tree_set_visits! before calling tree_plot with showvisits = true")
-            return(nothing)
-        end
+    elseif length(visits)>0
+        # if ! ("visit" in keys(getroots(tree)[1].data) )
+        #     println("tree_plot error: first call tree_set_visits! before calling tree_plot with showvisits = true")
+        #     return(nothing)
+        # end
         # cut=getroots(tree)[1].data["visit"]
         cm=[]
         ms=[]
         for n in traversal(tree, preorder)
+            if isleaf(tree,n)
+                ind=findfirst((x->occursin(x, n.name)),visits)
+                if isnothing(ind)
+                    push!(cm,1)
+                    push!(ms,1)
+                else
+                    push!(cm,ind+1)
+                    push!(ms,markersize)
+                end
             # isleaf(tree,n) ? c=_clade(tree,n,cut) : c=1
-            push!(cm,n.data["visit"]+1)
-            n.data["visit"] > 0 ? push!(ms,markersize) : push!(ms,1)
+            # push!(cm,n.data["visit"]+1)
+            # n.data["visit"] > 0 ? push!(ms,markersize) : push!(ms,1)
+            else
+                push!(cm,1)
+                push!(ms,1)
+            end
         end
         # cm=(x->x.data["clade"]).(getleaves(tree))
         # dcs=distinguishable_colors(1+length(union(cm)), [RGB(0,0,0), RGB(1,1,1)], dropseed=false)[1:end-1]
         # dcs=vcat([RGB(0.9,0.9,0.9)],distinguishable_colors(length(union(cm))-1, [RGB(0,0,0)],dropseed=true))
-        nclades=length(union((x->x.data["visit"]).(getnodes(tree))))
-        dcs=vcat([RGB(0.9,0.9,0.9)],distinguishable_colors(nclades, [RGB(0,0,0)],dropseed=true))
+        # nvisits=length(union((x->x.data["visit"]).(getnodes(tree))))
+        nvisits=length(visits)
+        # dcs=vcat([RGB(0.5,0.5,0.5)],distinguishable_colors(nvisits, [RGB(0,0,0)],dropseed=true)) #
+        dcs=distinguishable_colors(nvisits+1, [RGB(0.9,0.9,0.9)],dropseed=false)
+        # @show(length(dcs))
         Logging.disable_logging(Logging.Warn)
         pl=plot(tree, showtips = showtips,  markersize=ms, markercolors=cm, palette=dcs,
                     treetype=treetype, linewidth=linewidth, size=size,
                     markerstrokewidth=markerstrokewidth, alpha=alpha, kwargs=kwargs)
+        scatter!([collect(xlims(pl))[1]-1],[collect(ylims(pl))[1]-1], xlims=xlims(pl),ylims=ylims(pl),
+            c=dcs[1], label="internal", alpha=1, legend=legend)
+        for i in 1:length(visits)
+            scatter!([collect(xlims(pl))[1]-1],[collect(ylims(pl))[1]-1], xlims=xlims(pl),ylims=ylims(pl),
+                c=dcs[i+1], label=visits[i], alpha=1, legend=legend)
+        end
      else
-        pl=plot(tree, markersize=markersize, c=:black, treetype=treetype, linewidth = linewidth, size=size, showtips=showtips,
-                                    markerstrokewidth=markerstrokewidth, kwargs=kwargs)
+        pl=plot(tree, markersize=markersize, c=:black, treetype=treetype,
+                        linewidth = linewidth, size=size, showtips=showtips,
+                        markerstrokewidth=markerstrokewidth, kwargs=kwargs)
     end
     return(pl)
 end
